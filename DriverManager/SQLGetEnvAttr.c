@@ -187,7 +187,7 @@ SQLRETURN SQLGetEnvAttr( SQLHENV environment_handle,
                     ERROR_HY010, NULL,
                     SQL_OV_ODBC3 );
 
-            return function_return( SQL_HANDLE_ENV, environment, SQL_ERROR );
+            return function_return( SQL_HANDLE_ENV, environment, SQL_ERROR, DEFER_R0 );
         }
 
         if ( value )
@@ -231,7 +231,7 @@ SQLRETURN SQLGetEnvAttr( SQLHENV environment_handle,
       case SQL_ATTR_UNIXODBC_SYSPATH:
         if ( value )
         {
-			char b1[ 512 ];
+            char b1[ ODBC_FILENAME_MAX + 1 ];
 
             if ( buffer_length >= strlen( odbcinst_system_file_path( b1 ))) 
             {
@@ -276,5 +276,5 @@ SQLRETURN SQLGetEnvAttr( SQLHENV environment_handle,
                 environment -> msg );
     }
 
-    return function_return( SQL_HANDLE_ENV, environment, SQL_SUCCESS );
+    return function_return( SQL_HANDLE_ENV, environment, SQL_SUCCESS, DEFER_R0 );
 }

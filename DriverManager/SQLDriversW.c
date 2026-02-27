@@ -294,9 +294,9 @@ try_again:
             char szPropertyName[INI_MAX_PROPERTY_NAME+1];
             char szValue[INI_MAX_PROPERTY_NAME+1];
             char szIniName[ INI_MAX_OBJECT_NAME + 1 ];
-            char buffer[ 1024 ];
+            char buffer[ 2 * INI_MAX_OBJECT_NAME + 3 ];
             int total_len = 0;
-			char b1[ 512 ], b2[ 512 ];
+            char b1[ ODBC_FILENAME_MAX + 1 ], b2[ ODBC_FILENAME_MAX + 1 ];
             int found = 0;
 
             /*
@@ -366,7 +366,7 @@ try_again:
 
             if ( !found ) 
             {
-                sprintf( szIniName, "%s/%s", odbcinst_system_file_path( b1 ), odbcinst_system_file_name( b2 ));
+                sprintf( szIniName, "%s/%s", odbcinst_user_file_path( b1 ), odbcinst_user_file_name( b2 ));
 
                 memset( buffer, '\0', sizeof( buffer ));
     #ifdef __OS2__

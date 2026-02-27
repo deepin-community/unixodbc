@@ -187,7 +187,7 @@ static int _check_ini_cache( int *ret,
 
         if ( pRetBuffer )
         {
-            if ( ini_cache -> value )
+            if ( ini_cache -> value ) {
                 if ( nRetBuffer < strlen( ini_cache -> value )) {
                     strncpy( pRetBuffer, ini_cache -> value, nRetBuffer );
                     pRetBuffer[ nRetBuffer - 1 ] = '\0';
@@ -195,6 +195,7 @@ static int _check_ini_cache( int *ret,
                 else {
                     strcpy( pRetBuffer, ini_cache -> value );
                 }
+            }
 
             *ret = ini_cache -> ret_value;
             return 1;
@@ -251,7 +252,7 @@ static void _save_ini_cache( int ret,
 
 static void _clear_ini_cache( void ) 
 {
-    struct ini_cache *ini_cache = ini_cache_head, *prev = NULL;
+    struct ini_cache *ini_cache = ini_cache_head;
 
     while (( ini_cache = ini_cache_head ) != NULL  )
     {
@@ -364,7 +365,7 @@ void __clear_ini_cache( void )
 
 #endif
 
-int SQLGetPrivateProfileString( LPCSTR  pszSection,
+int __SQLGetPrivateProfileStringNL( LPCSTR  pszSection,
                                 LPCSTR  pszEntry,
                                 LPCSTR  pszDefault,
                                 LPSTR   pRetBuffer,
@@ -428,6 +429,10 @@ int SQLGetPrivateProfileString( LPCSTR  pszSection,
             }
 
             return ret;
+        }
+        else if ( !*pszFileName )
+        {
+            return 0; /* Asking for empty filename returns nothing, not even default */
         }
     }
 
@@ -538,6 +543,11 @@ int SQLGetPrivateProfileString( LPCSTR  pszSection,
     if ( pszSection == NULL )
     {
         _odbcinst_GetSections( hIni, pRetBuffer, nRetBuffer, &nBufPos );
+
+        if (nBufPos > 0)
+            ret = _multi_string_length(pRetBuffer);
+        else
+            ret = 0;  /* Indicate not found */
     }
     /*****************************************************
      * EXTRACT ENTRIES
@@ -545,6 +555,10 @@ int SQLGetPrivateProfileString( LPCSTR  pszSection,
     else if ( pszEntry == NULL )
     {
         _odbcinst_GetEntries( hIni, pszSection, pRetBuffer, nRetBuffer, &nBufPos );
+        if (nBufPos > 0)
+            ret = _multi_string_length(pRetBuffer);
+        else
+            ret = 0;  /* Indicate not found */
     }
     /*****************************************************
      * EXTRACT AN ENTRY
@@ -573,20 +587,37 @@ int SQLGetPrivateProfileString( LPCSTR  pszSection,
         else
         {
             iniValue( hIni, szValue );
-	    if ( pRetBuffer ) 
-	    {
-	        strncpy( pRetBuffer, szValue, nRetBuffer );
-	        pRetBuffer[ nRetBuffer - 1 ] = '\0';
-	    }
+	        if ( pRetBuffer ) 
+	        {
+	            strncpy( pRetBuffer, szValue, nRetBuffer );
+	            pRetBuffer[ nRetBuffer - 1 ] = '\0';
+	        }
             nBufPos = strlen( szValue );
         }
+        
+        ret = strlen( pRetBuffer );
     }
 
     iniClose( hIni );
 
-    ret = strlen( pRetBuffer );
-
     save_ini_cache( ret, pszSection, pszEntry, pszDefault, pRetBuffer, nRetBuffer, pszFileName );
+
+    return ret;
+}
+
+int SQLGetPrivateProfileString( LPCSTR  pszSection,
+                                LPCSTR  pszEntry,
+                                LPCSTR  pszDefault,
+                                LPSTR   pRetBuffer,
+                                int     nRetBuffer,
+                                LPCSTR  pszFileName
+                              )
+{
+int ret;
+
+    __lock_config_mode();
+    ret = __SQLGetPrivateProfileStringNL( pszSection, pszEntry, pszDefault, pRetBuffer, nRetBuffer, pszFileName );
+    __unlock_config_mode();
 
     return ret;
 }
@@ -628,7 +659,7 @@ int  INSTAPI SQLGetPrivateProfileStringW( LPCWSTR lpszSection,
 		buf = NULL;
 	}
 
-	ret = SQLGetPrivateProfileString( sect, entry, def, buf, cbRetBuffer, name );
+	ret = buf ? SQLGetPrivateProfileString( sect, entry, def, buf, cbRetBuffer, name ) : -1;
 
 	if ( sect )
 		free( sect );
@@ -643,7 +674,10 @@ int  INSTAPI SQLGetPrivateProfileStringW( LPCWSTR lpszSection,
 	{
 		if ( buf && lpszRetBuffer )
 		{
-			_single_copy_to_wide( lpszRetBuffer, buf, ret + 1 );
+            if ( !lpszSection || !lpszEntry )
+                ret = _multi_string_copy_to_wide( lpszRetBuffer, buf, ret );
+            else
+                ret = _single_copy_to_wide( lpszRetBuffer, buf, ret );
 		}
 	}
 

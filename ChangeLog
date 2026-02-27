@@ -1,7 +1,111 @@
+7-Oct-20205
+2.3.14
+
+    * Fix bug in SQLDriverConnect with pooling
+
+29-Sep-2025
+2.3.13
+
+    * Disable connection pooling if the cursor lib is in use, the two conflict over the manupluation
+      of driver function entry points
+    * small patch to odbc/isql to have a -i option that removes the help text, but does 
+      not disable prompts like the -b option. This patch also prevents isql from crashing
+      when no $HOME is set.
+    * Prevent the DM from going via the W functions, bipassing the cursor lib if in use
+    * Added better support for cross compiling in exe/Makefile.am
+    * Refactor in SQLCancel and a endian fix at the same time
+    * Add check for Solaris version of getpwuid_r
+    * Make definition of TCHAR match WCHAR
+    * Added some missing error logging in SQLSpecialColumns[W]
+    * Set driver_name in SQLBrowseConnect(W) to "" to prevent seg fault if lib not found
+    * Various mem buffers fixes. Thanks chipitsine
+    * Fix race condition with threaded applications where SQLGetPrivateProfileString can fail
+      due to collision with loading driver library during connection
+    * Added some ODBC 4 types to sql.h
+    * Fix sizeof( ptr ) error in extract_diag_error()
+    * Add missing check and call to SQL_ATTR_RESET_CONNECTION in SQLConnect
+    * Deal with arbitrary length passwords in pooled connections
+    * Fix some buffer overflows in SQLError(W) and SQLGetDiagRec(W)
+    * Fix bug with setting Env Attribute via DMEnvAttr
+
+8-Aug-2023
+2.3.12
+
+    * Fix iconv handle leak with pooling
+    * Add windows encoding patch
+    * Avoid failed build if clock_gettime() is not available
+    * Allow passing in a entire connection string into iusql
+    * Allow isql to handle SQL_SUCCESS_WITH_INFO from SQLPrepare
+    * Add extra logging for ODBCINST connect settings
+    * Allow allocated copy (instead of fixed length) for the connection string with 
+      pooling to allow any length
+    * Export __clear_ini_cache() from odbcinst to allow explicitly clearing the ini cache
+    * Fix seg fault when used with SQLAPI
+    * Add --enable-utf8ini flag to add utf8 to WCHAR conversions in SQLGetPrivateProfileStringW
+    * Allow longer error messages via GetDiag functions
+    * Add --enable-singleenv to enable single shared env handle when using pooling
+
+4-May-2022
+2.3.11
+
+    * Missing files has caused a problem. I am pushing a 2.3.11 to try and make versiosn match up
+
+11-Jan-2021
+2.3.10
+
+    * Add connection pooling via wide connection functions
+    * Remove "#define VERSION" from unixodbc_conf.h
+    * Call driver functions through prototypes 
+    * Add connection pool limit option
+    * Add fseeko support in cursor lib
+    * Try and prevent logging buffer overflow
+    * Add 'echo' option to isql/iusql
+    * Alter isql/iusql buffering
+    * Alter unicode to ascii conversion in SQLGetDiagField
+    * Fix pooling problem when user name and or password is not provided
+    * Fix a couple of reported buffer overflow conditions
+    * Fix iconv leak with timeout in pooled connection
+
+06-Sep-2020
+2.3.9
+
+    * Remove "#define UNIXODBC_SOURCE" from unixodbc_conf.h
+
+30-Aug-2020
+2.3.8
+
+    * Add configure support for editline
+    * SQLDriversW was ignoring user config
+    * SQLDataSources Fix termination character
+    * Fix for pooling seg fault
+    * Make calling SQLSetStmtAttrW call the W function in the driver if its there
+    * Try and fix race condition clearing system odbc.ini file
+    * Remove trailing space from isql/iusql SQL
+    * When setting connection attributes set before connect also check if the W entry points can be used
+    * Try calling the W error functions first if available in the driver
+    * Add iconvperdriver configure option to allow calling unicode_setup in SQLAllocHandle
+    * iconv handles was being lost when reusing pooled connection
+    * Catch null copy in iniPropertyInsert
+    * Fix a few leaks 
+
+10-Aug-2018
+2.3.7
+
+    * Fix for pkg-config file update on no linux platforms
+    * Add W entry for GUI work
+    * Various fixes for SQLBrowseConnect/W, SQLGetConnectAttr/W,and SQLSetConnectAttr/W
+    * Fix buffer overflows in SQLConnect/W and refine behaviour of SQLGet/WritePrivateProfileString
+    * SQLBrowseConnect/W allow disconnecting a started browse session after error
+    * Add --with-stats-ftok-name configure option to allow the selection of a file name
+      used to generate the IPC id when collecting stats. Default is the system odbc.ini file
+    * Improve diag record handling with the behavior of Windows DM and export SQLCancelHandle
+    * bug fix when SQLGetPrivateProfileString() is called to get a list of sections or a list of keys
+    * Connection pooling: Fix liveness check for Unicode drivers
+
 19-March-2018
 2.3.6
 
-    * Fix order of arguments in SQLWriteFileDSN.c, fix unwanted free() in iusql.c
+    * Fix order of arguments in SQLWriteFileDSN.c, fix unwanted free() in iusql.c (CVE-2018-7485)
     * Add pkg-config files
 
 2-Jan-2018
@@ -23,7 +127,7 @@
     * Fix problem calling the driver to report errors if the error is from the DM and the driver 
       has not been called
     * SQLSetConnectAttrW crashes when attempting to set SQL_ATTR_LOGIN_TIMEOUT
-    * Buffer overflow in unicode_to_ansi_copy()
+    * Buffer overflow in unicode_to_ansi_copy() (CVE-2018-7409)
     * SQLDriverConnect with not-found FILEDSN causes crash
     * SQLGetDescRec with null name pointer causes crash
     * Connection string escaping does not work

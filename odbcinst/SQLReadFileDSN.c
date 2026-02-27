@@ -87,9 +87,8 @@ BOOL SQLReadFileDSN(            LPCSTR  pszFileName,
                                 WORD    *pnString )
 {
     HINI    hIni;
-    int     nBufPos         = 0;
     char    szValue[INI_MAX_PROPERTY_VALUE+1];
-    char    szFileName[ODBC_FILENAME_MAX+1];
+    char    szFileName[ODBC_FILENAME_MAX+2];
 
     inst_logClear();
 
@@ -147,7 +146,11 @@ BOOL SQLReadFileDSN(            LPCSTR  pszFileName,
         char szPath[ODBC_FILENAME_MAX+1];
         *szPath = '\0';
         _odbcinst_FileINI( szPath );
+#ifdef HAVE_SNPRINTF
+        snprintf( szFileName, sizeof( szFileName ), "%s/%s", szPath, pszFileName );
+#else
         sprintf( szFileName, "%s/%s", szPath, pszFileName );
+#endif
 
         if ( strlen( szFileName ) < 4 || strcmp( szFileName + strlen( szFileName ) - 4, ".dsn" ))
         {
@@ -186,6 +189,11 @@ BOOL SQLReadFileDSN(            LPCSTR  pszFileName,
             inst_logPushMsg( __FILE__, __FILE__, __LINE__, LOG_CRITICAL,
                              ODBC_ERROR_REQUEST_FAILED, "" );
 
+            if ( pszFileName )
+            {
+                iniClose( hIni );
+            }
+
             return FALSE;
         }
         else
@@ -193,7 +201,6 @@ BOOL SQLReadFileDSN(            LPCSTR  pszFileName,
             iniValue( hIni, szValue );
             strncpy( pszString, szValue, nString );
             pszString[ nString - 1 ] = '\0';
-            nBufPos = strlen( szValue );
         }
     }
 
@@ -252,7 +259,7 @@ BOOL INSTAPI  SQLReadFileDSNW(LPCWSTR  lpszFileName,
     {
         if ( str && lpszString )
         {
-            _single_copy_to_wide( lpszString, str, len + 1 );
+            len = _single_copy_to_wide( lpszString, str, len + 1 );
         }
     }
 

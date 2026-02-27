@@ -178,9 +178,31 @@ int check_target_type( int c_type, int connection_mode)
 		case SQL_C_UTINYINT:
 		case SQL_C_GUID:
 		case SQL_C_WCHAR:
-		case SQL_ARD_TYPE:
 		case SQL_C_DOUBLE:
-		/* case SQL_C_XML: still trying to find what value this is */
+#if (ODBCVER >= 0x0400)
+        case SQL_TYPE_TIME_WITH_TIMEZONE:
+        case SQL_TYPE_TIMESTAMP_WITH_TIMEZONE:
+        case SQL_UDT:
+        case SQL_ROW:
+        case SQL_ARRAY:
+        case SQL_MULTISET:
+        case SQL_VARIANT_TYPE:
+#endif /* ODBCVER >= 0x0400 */
+#if (ODBCVER >= 0x0300)
+        case SQL_ARD_TYPE:
+#endif
+#if (ODBCVER >= 0x0380)
+        case SQL_APD_TYPE:
+#endif
+        /*
+         * MS Added types
+         */
+        case -150:  /* SQL_SS_VARIANT */
+        case -151:  /* SQL_SS_UDT */
+        case -152:  /* SQL_SS_XML */
+        case -153:  /* SQL_SS_TABLE */
+        case -154:  /* SQL_SS_TIME2 */
+        case -155:  /* SQL_SS_TIMESTAMPOFFSET */
 			return 1;
 
 		default:
@@ -347,5 +369,5 @@ SQLRETURN SQLBindCol( SQLHSTMT statement_handle,
                 statement -> msg );
     }
 
-    return function_return( SQL_HANDLE_STMT, statement, ret );
+    return function_return( SQL_HANDLE_STMT, statement, ret, DEFER_R3 );
 }
