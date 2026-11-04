@@ -1,3 +1,9 @@
+unixodbc (2.3.6-0.1-deepin2) unstable; urgency=medium
+
+  * Rebuild in new environment.
+
+ -- lichenggang <lichenggang@uniontech.com>  Wed, 04 Nov 2026 18:11:53 +0800
+
 unixodbc (2.3.6-0.1-deepin1) unstable; urgency=medium
 
   * Rebuild
